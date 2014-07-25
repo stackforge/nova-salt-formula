@@ -1,0 +1,25 @@
+nova:
+  public_ip: 10.0.0.12
+  internal_ip: 10.0.0.12
+  admin_ip: 10.0.0.12
+  public_interface: eth0
+  private_interface: eth0
+  keystone:
+    password: 'pass'
+    email: zhang.lei.fly@gmail.com
+    host: 10.0.0.12
+  rabbitmq:
+    name: openstack
+    password: pass
+    ip: 10.0.0.12
+  mysql:
+    ip: 10.0.0.12
+    host: '%'
+    password: pass
+  config:
+    DEFAULT:
+      novncproxy_base_ip: 10.0.0.12
+
+
+{#- vim:ft=sls
+-#}

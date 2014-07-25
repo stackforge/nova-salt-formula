@@ -1,0 +1,84 @@
+{%- set nova=salt["grains.filter_by"]({
+  "Debian": {
+    "name": "nova",
+    "controller_pkgs": ["nova-api",
+                        "nova-conductor",
+                        "nova-consoleauth",
+                        "nova-novncproxy",
+                        "nova-scheduler",
+                        "python-novaclient"],
+    "controller_services": ["nova-api",
+                            "nova-conductor",
+                            "nova-consoleauth",
+                            "nova-scheduler"],
+  },
+}, merge=salt["pillar.get"]("nova:lookup")) %}
+
+# Set the nova default config
+{%- set nova_config = {
+  "DEFAULT": {
+    "dhcpbridge_flagfile": "/etc/nova/nova.conf",
+    "dhcpbridge": "/usr/bin/nova-dhcpbridge",
+    "logdir": "/var/log/nova",
+    "state_path": "/var/lib/nova",
+    "lock_path": "/var/lock/nova",
+    "force_dhcp_release": "True",
+    "iscsi_helper": "tgtadm",
+    "connection_type": "libvirt",
+    "root_helper": "sudo nova-rootwrap /etc/nova/rootwrap.conf",
+    "ec2_private_dns_show_ip": "True",
+    "api_paste_config": "/etc/nova/api-paste.ini",
+    "enabled_apis": "ec2,osapi_compute,metadata",
+    "memcached_servers": salt["pillar.get"]("nova:internal_ip") + ":11211",
+
+    "auth_strategy": "keystone",
+    "glance_host": salt["pillar.get"]("nova:internal_ip"), 
+
+    "rpc_backend": "nova.openstack.common.rpc.impl_kombu",
+    "rabbit_userid": salt["pillar.get"]("nova:rabbitmq:name"),
+    "rabbit_password": salt["pillar.get"]("nova:rabbitmq:password"),
+
+    "novncproxy_host": "0.0.0.0",
+    "vncserver_listen": "0.0.0.0",
+    "novncproxy_base_url": "http://" + salt["pillar.get"]("nova:config:DEFAULT:novncproxy_base_ip") + ":6080/vnc_auto.html",
+    "vncserver_proxyclient_address": salt["pillar.get"]("nova:internal_ip"),
+
+    "network_manager ": "nova.network.manager.VlanManager",
+    "vlan_start ": "1000",
+    "vlan_interface ": salt["pillar.get"]("nova:private_interface"),
+    "multi_host": True,
+    "send_arp_for_ha": True,
+    "public_interface": salt["pillar.get"]("nova:public_interface"),
+    "share_dhcp_address": True,
+    "dns_server": ["223.6.6.6",
+                   "8.8.4.4"],
+
+    "resume_guests_state_on_host_boot": "True",
+    "snapshot_image_format": "qcow2",
+    "remove_unused_base_images": "True",
+
+  },
+  "database": {
+    "connection": ("mysql://nova:" + salt["pillar.get"]("nova:mysql:password") + "@"
+                   + salt["pillar.get"]("nova:mysql:ip", "localhost")
+                   + "/nova?charset=utf8")
+  },
+  "libvirt": {
+    "virt_type": "kvm",
+    "snapshot_compression": "True",
+    "use_virtio_for_bridges": "True",
+    "snapshot_compression": "true",
+    "live_migration_flag": "VIR_MIGRATE_UNDEFINE_SOURCE,VIR_MIGRATE_PEER2PEER,VIR_MIGRATE_LIVE",
+  },
+  "keystone_authtoken":{
+    "auth_host": salt["pillar.get"]("nova:keystone:host", "localhost"),
+    "auth_port": 5000,
+    "auth_protocol": "http",
+    "admin_tenant_name": "service",
+    "admin_user" : "nova",
+    "admin_password": salt["pillar.get"]("nova:keystone:password")
+  }
+} %}
+
+{#- vim:ft=sls
+-#}
