@@ -12,7 +12,6 @@
                             "nova-conductor",
                             "nova-consoleauth",
                             "nova-scheduler"],
-    "conntrack": "conntrack",
     "all_in_one_pkgs": ["nova-api",
                         "nova-compute",
                         "nova-compute-" + salt["pillar.get"]("nova:config:libvirt:virt_type", virt_type),
@@ -33,6 +32,7 @@
                      "nova-compute-" + salt["pillar.get"]("nova:config:libvirt:virt_type", virt_type),
                      ],
     "compute_services": ["nova-network", "nova-compute"],
+    "conntrack": "conntrack",
   },
   "RedHat": {
     "name": "nova",
@@ -46,6 +46,13 @@
                             "openstack-nova-conductor",
                             "openstack-nova-consoleauth",
                             "openstack-nova-scheduler"],
+    "compute_pkgs": ["openstack-nova-api",
+                     "openstack-nova-compute",
+                     "openstack-nova-network"],
+    "compute_services": ["openstack-nova-compute",
+                         "openstack-nova-network",
+                         "openstack-nova-metadata-api"],
+                         
     "conntrack": "conntrack-tools",
   }
 }, merge=salt["pillar.get"]("nova:lookup")) %}

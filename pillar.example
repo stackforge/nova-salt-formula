@@ -19,8 +19,6 @@ nova:
   config:
     DEFAULT:
       novncproxy_base_ip: 
-    libvirt:
-      virt_type: qemu
 
 {#- vim:ft=sls
 -#}
