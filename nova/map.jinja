@@ -1,3 +1,4 @@
+{% set virt_type="kvm" if grains['virtual'] == "physical" else "qemu" %}
 {%- set nova=salt["grains.filter_by"]({
   "Debian": {
     "name": "nova",
@@ -14,7 +15,7 @@
     "conntrack": "conntrack",
     "all_in_one_pkgs": ["nova-api",
                         "nova-compute",
-                        "nova-compute-" + salt["pillar.get"]("nova:config:libvirt:virt_type", "kvm"),
+                        "nova-compute-" + salt["pillar.get"]("nova:config:libvirt:virt_type", virt_type),
                         "nova-conductor",
                         "nova-consoleauth",
                         "nova-novncproxy",
@@ -25,7 +26,13 @@
                             "nova-conductor",
                             "nova-consoleauth",
                             "nova-scheduler",
-                            "nova-network"]
+                            "nova-network"],
+    "compute_pkgs": ["nova-network",
+                     "nova-api-metadata",
+                     "nova-compute",
+                     "nova-compute-" + salt["pillar.get"]("nova:config:libvirt:virt_type", virt_type),
+                     ],
+    "compute_services": ["nova-network", "nova-compute"],
   },
   "RedHat": {
     "name": "nova",
@@ -53,7 +60,6 @@
     "lock_path": "/var/lock/nova",
     "force_dhcp_release": "True",
     "iscsi_helper": "tgtadm",
-    "connection_type": "libvirt",
     "root_helper": "sudo nova-rootwrap /etc/nova/rootwrap.conf",
     "ec2_private_dns_show_ip": "True",
     "api_paste_config": "/etc/nova/api-paste.ini",
@@ -96,7 +102,7 @@
                    + "/nova?charset=utf8")
   },
   "libvirt": {
-    "virt_type": "kvm",
+    "virt_type": virt_type,
     "snapshot_compression": "True",
     "use_virtio_for_bridges": "True",
     "snapshot_compression": "true",
