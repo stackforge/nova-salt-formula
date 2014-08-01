@@ -9,13 +9,13 @@ include:
 nova:
   pkg.installed:
     - refresh: False
-    - pkgs: {{ nova.controller_pkgs }}
+    - pkgs: {{ nova.all_in_one_pkgs }}
     - require_in:
       - file: /etc/nova/nova.conf
   service.running:
     - enable: True
     - restart: True
-    - names: {{ nova.controller_services }}
+    - names: {{ nova.all_in_one_services}}
     - require:
       - pkg: nova
     - watch:

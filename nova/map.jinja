@@ -11,7 +11,36 @@
                             "nova-conductor",
                             "nova-consoleauth",
                             "nova-scheduler"],
+    "conntrack": "conntrack",
+    "all_in_one_pkgs": ["nova-api",
+                        "nova-compute",
+                        "nova-compute-" + salt["pillar.get"]("nova:config:libvirt:virt_type", "kvm"),
+                        "nova-conductor",
+                        "nova-consoleauth",
+                        "nova-novncproxy",
+                        "nova-network",
+                        "nova-scheduler"],
+    "all_in_one_services": ["nova-api",
+                            "nova-compute",
+                            "nova-conductor",
+                            "nova-consoleauth",
+                            "nova-scheduler",
+                            "nova-network"]
   },
+  "RedHat": {
+    "name": "nova",
+    "controller_pkgs": ["openstack-nova-api",
+                        "openstack-nova-conductor",
+                        "openstack-nova-common",
+                        "openstack-nova-novncproxy",
+                        "openstack-nova-scheduler",
+                        "python-novaclient"],
+    "controller_services": ["openstack-nova-api",
+                            "openstack-nova-conductor",
+                            "openstack-nova-consoleauth",
+                            "openstack-nova-scheduler"],
+    "conntrack": "conntrack-tools",
+  }
 }, merge=salt["pillar.get"]("nova:lookup")) %}
 
 # Set the nova default config
@@ -31,21 +60,24 @@
     "enabled_apis": "ec2,osapi_compute,metadata",
     "memcached_servers": salt["pillar.get"]("nova:internal_ip") + ":11211",
 
+    "compute_driver": "libvirt.LibvirtDriver",
+
     "auth_strategy": "keystone",
-    "glance_host": salt["pillar.get"]("nova:internal_ip"), 
+    "glance_host": salt["pillar.get"]("nova:glance:host"), 
 
     "rpc_backend": "nova.openstack.common.rpc.impl_kombu",
     "rabbit_userid": salt["pillar.get"]("nova:rabbitmq:name"),
     "rabbit_password": salt["pillar.get"]("nova:rabbitmq:password"),
+    "rabbit_host": salt["pillar.get"]("nova:rabbitmq:ip"),
 
     "novncproxy_host": "0.0.0.0",
     "vncserver_listen": "0.0.0.0",
     "novncproxy_base_url": "http://" + salt["pillar.get"]("nova:config:DEFAULT:novncproxy_base_ip") + ":6080/vnc_auto.html",
     "vncserver_proxyclient_address": salt["pillar.get"]("nova:internal_ip"),
 
-    "network_manager ": "nova.network.manager.VlanManager",
-    "vlan_start ": "1000",
-    "vlan_interface ": salt["pillar.get"]("nova:private_interface"),
+    "network_manager": "nova.network.manager.VlanManager",
+    "vlan_start": "1000",
+    "vlan_interface": salt["pillar.get"]("nova:private_interface"),
     "multi_host": True,
     "send_arp_for_ha": True,
     "public_interface": salt["pillar.get"]("nova:public_interface"),
@@ -79,6 +111,13 @@
     "admin_password": salt["pillar.get"]("nova:keystone:password")
   }
 } %}
+
+{% for section, value in salt["pillar.get"]("nova:config").iteritems() %}
+  {% if not nova_config.has_key(section) %}
+    {% do nova_config.update({ section:{} }) %}
+  {% endif %}
+  {% do nova_config[section].update(value) %}
+{% endfor %}
 
 {#- vim:ft=sls
 -#}

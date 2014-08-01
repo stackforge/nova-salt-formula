@@ -18,8 +18,9 @@ nova:
     password: pass
   config:
     DEFAULT:
-      novncproxy_base_ip: 10.0.0.12
-
+      novncproxy_base_ip: 
+    libvirt:
+      virt_type: qemu
 
 {#- vim:ft=sls
 -#}
